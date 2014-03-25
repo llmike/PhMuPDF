@@ -1,0 +1,16 @@
+F1         - open about dialog
+F3, Ctrl-O - open file selector dialog
+F7, Ctrl-F - invoke search dialog
+Ctrl-S     - open settings dialog
+Ctrl-I     - document properties
+Ctrl-R     - document rotation
+
+Ctrl-minus - zoomout document
+Ctrl-plus  - zoomin document
+
+Backspace, Alt-Left - return to page which was before link click
+Alt-Right           - return back to page after link click
+
+- Search -
+Enter - find next occurrence,
+Shift-Enter - find previous occurrence.

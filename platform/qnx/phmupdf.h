@@ -101,6 +101,8 @@ typedef struct phmupdf_settings
 
 #define PHMUPDF_SEARCH_MAX_LENGTH       512
 
+#define PHMUPDF_SELECTION_MAX_LENGTH    4096
+
 typedef struct photon_mupdf
 {
     fz_context*      pdfctx;
@@ -115,6 +117,12 @@ typedef struct photon_mupdf
     int              pdf_zoommin;
     int              pdf_opened;
     int              pdf_password_tries;
+    int              selection;
+    fz_point         selection_start;
+    fz_point         selection_stop;
+    fz_irect         selection_box[PHMUPDF_SELECTION_MAX_LENGTH];
+    unsigned int     selection_boxes;
+    unsigned int     selection_page;
 
     PtFileSelectionInfo_t fileinfo;
     char             filename[PATH_MAX+NAME_MAX+1];

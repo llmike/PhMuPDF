@@ -717,6 +717,40 @@ void phmupdf_content_find_text(photon_mupdf_t* app, int x, int y, int buttons)
                 fz_free_device(pdf_device);
             }
 
+
+    if ((!app->selection) && (buttons & Ph_BUTTON_SELECT))
+    {
+        fz_point  p={x, y};
+        fz_matrix ctm;
+
+        fz_invert_matrix(&ctm, &app->pdf_pages[pageno].page_ctm);
+        fz_transform_point(&p, &ctm);
+
+        app->selection=1;
+        app->selection_start=p;
+        app->selection_page=pageno;
+    }
+
+    if ((app->selection) && (!(buttons & Ph_BUTTON_SELECT)))
+    {
+        fz_point  p={x, y};
+        fz_matrix ctm;
+
+        fz_invert_matrix(&ctm, &app->pdf_pages[pageno].page_ctm);
+        fz_transform_point(&p, &ctm);
+
+        app->selection=1;
+        app->selection_stop=p;
+        app->selection_page=pageno;
+        if ((app->selection_start.x==app->selection_stop.x) &&
+            (app->selection_start.y==app->selection_stop.y))
+        {
+            /* Reset selection on empty click */
+            app->selection=0;
+            app->selection_page=-1;
+        }
+    }
+
             /* Now search these coordinates through the rest of text blocks on this page */
             if (app->pdf_pages[pageno].page_text)
             {
@@ -861,6 +895,7 @@ int phmupdf_content_callback_raw(PtWidget_t* widget, void* data, PtCallbackInfo_
               }
               break;
          case Ph_EV_BUT_PRESS:
+         case Ph_EV_BUT_RELEASE:
          case Ph_EV_PTR_MOTION_BUTTON:
          case Ph_EV_PTR_MOTION_NOBUTTON:
               {
@@ -892,6 +927,7 @@ int phmupdf_content_callback_raw(PtWidget_t* widget, void* data, PtCallbackInfo_
     switch (info->event->type)
     {
          case Ph_EV_BUT_PRESS:
+         case Ph_EV_BUT_RELEASE:
          case Ph_EV_PTR_MOTION_BUTTON:
          case Ph_EV_PTR_MOTION_NOBUTTON:
               {
@@ -903,9 +939,15 @@ int phmupdf_content_callback_raw(PtWidget_t* widget, void* data, PtCallbackInfo_
                       break;
                   }
 
+                  if ((info->event->type==Ph_EV_BUT_RELEASE) && (ptrevent->buttons & Ph_BUTTON_SELECT))
+                  {
+                      ptrevent->buttons=0;
+                  }
+
                   if (info->event->type==Ph_EV_PTR_MOTION_BUTTON)
                   {
-                      phmupdf_content_find_text(app, x, y, 0);
+                      phmupdf_content_find_text(app, x, y, ptrevent->buttons);
+                      /* Do not automatically press on links */
                       phmupdf_content_find_link(app, x, y, 0);
                   }
                   else
@@ -1269,6 +1311,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         app->pdf_zoom=PHMUPDF_ZOOM_FIT_PAGE;
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1286,6 +1329,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         app->pdf_zoom=PHMUPDF_ZOOM_FIT_WIDTH;
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1307,6 +1351,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1328,6 +1373,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1349,6 +1395,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1370,6 +1417,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1391,6 +1439,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1412,6 +1461,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1433,6 +1483,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1454,6 +1505,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1475,6 +1527,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1496,6 +1549,7 @@ int phmupdf_zoomcheck_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t*
         }
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
 
         tcb->doit=0;
         return Pt_CONTINUE;
@@ -1573,6 +1627,7 @@ int phmupdf_zoomselect_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t
 
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
     }
 
     return Pt_CONTINUE;
@@ -1647,10 +1702,17 @@ int phmupdf_zoomraw_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t* i
                                                case PHMUPDF_ZOOM_FIT_WIDTH:
                                                     sprintf(text, "%d%%", app->pdf_zoommax);
                                                     PtSetResource(widget, Pt_ARG_TEXT_STRING, text, 0);
+                                                    PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 12, 0);
+                                                    break;
+                                               case PHMUPDF_ZOOM_FIT_PAGE:
+                                                    sprintf(text, "%d%%", app->pdf_zoom);
+                                                    PtSetResource(widget, Pt_ARG_TEXT_STRING, text, 0);
+                                                    PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 11, 0);
                                                     break;
                                                default:
                                                     sprintf(text, "%d%%", app->pdf_zoom);
                                                     PtSetResource(widget, Pt_ARG_TEXT_STRING, text, 0);
+                                                    PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 0, 0);
                                                     break;
                                            }
                                            break;
@@ -1774,6 +1836,7 @@ int phmupdf_zoomin_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t* in
     {
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
     }
 
     return Pt_CONTINUE;
@@ -1881,6 +1944,7 @@ int phmupdf_zoomout_callback(PtWidget_t* widget, void* data, PtCallbackInfo_t* i
     {
         phmupdf_change_zoom_level(app);
         phmupdf_search_recreate_boxes(app);
+        app->selection=0;
     }
 
     return Pt_CONTINUE;
@@ -1932,6 +1996,7 @@ int phmupdf_rotation_callback_dialog(int button, void* data)
             app->pdf_zoom=PHMUPDF_ZOOM_FIT_WIDTH;
             phmupdf_change_zoom_level(app);
             phmupdf_search_recreate_boxes(app);
+            app->selection=0;
         }
     }
 
@@ -2662,15 +2727,8 @@ int phmupdf_scrollbar_callback_raw(PtWidget_t* widget, void* data, PtCallbackInf
                           case Pk_BackSpace:
                                {
                                    unsigned int* scroll_position;
-                                   unsigned int  push_position=0;
 
                                    PtGetResource(app->phpagescroll, Pt_ARG_GAUGE_VALUE, &scroll_position, 0);
-
-                                   /* Push current position to the stack */
-                                   if ((app->jump_stack_ptr==app->jump_stack_last_valid+1) && (app->jump_stack_ptr!=-1))
-                                   {
-                                       push_position=1;
-                                   }
 
                                    if (app->jump_stack_ptr!=-1)
                                    {
@@ -2696,15 +2754,8 @@ int phmupdf_scrollbar_callback_raw(PtWidget_t* widget, void* data, PtCallbackInf
                                    if ((keyevent->key_mods==Pk_KM_Alt) || (keyevent->key_mods==Pk_KM_AltGr))
                                    {
                                        unsigned int* scroll_position;
-                                       unsigned int  push_position=0;
 
                                        PtGetResource(app->phpagescroll, Pt_ARG_GAUGE_VALUE, &scroll_position, 0);
-
-                                       /* Push current position to the stack */
-                                       if ((app->jump_stack_ptr==app->jump_stack_last_valid+1) && (app->jump_stack_ptr!=-1))
-                                       {
-                                           push_position=1;
-                                       }
 
                                        if (app->jump_stack_ptr!=-1)
                                        {
@@ -3127,7 +3178,7 @@ int phmupdf_search_forward_callback(PtWidget_t* widget, void* data, PtCallbackIn
     fz_device*      pdf_device=NULL;
     char            text[16];
     wchar_t         wc_text[PHMUPDF_SEARCH_MAX_LENGTH];
-    int             wc_text_length;
+    int             wc_text_length=0;
 
     app=(photon_mupdf_t*)data;
 
@@ -3603,7 +3654,6 @@ int phmupdf_search_backward_callback(PtWidget_t* widget, void* data, PtCallbackI
     char            text[16];
     int             temp_page;
     wchar_t         wc_text[PHMUPDF_SEARCH_MAX_LENGTH];
-    int             wc_text_length;
 
     app=(photon_mupdf_t*)data;
 
@@ -3629,7 +3679,6 @@ int phmupdf_search_backward_callback(PtWidget_t* widget, void* data, PtCallbackI
         textptr+=charlen;
     } while(*textptr!=0);
     wc_text[it]=0x00000000;
-    wc_text_length=it;
     textptr=textptr_utf8;
 
     /* Check if it will a new search, if so clear history */
@@ -5287,6 +5336,25 @@ void phmupdf_draw_content(PtWidget_t* widget, PhTile_t* damage)
                     PgAlphaOn();
                     PgSetAlpha(Pg_ALPHA_OP_SRC_GLOBAL | Pg_BLEND_SRC_As | Pg_BLEND_DST_1mAs, NULL, NULL, 0x60, NULL);
                     PgSetFillColor(PgRGB(0x20, 0x20, 0xA0));
+                    PgDrawRect(&dst_rect, Pg_DRAW_FILL);
+                    PgAlphaOff();
+                }
+            }
+
+            /* Highlight selection text */
+            if ((app->selection) && (app->selection_page==pageno))
+            {
+                int jt;
+
+                for (jt=0; jt<app->selection_boxes; jt++)
+                {
+                    dst_rect.ul.x=position.x+app->selection_box[jt].x0;
+                    dst_rect.ul.y=position.y+app->selection_box[jt].y0-offset;
+                    dst_rect.lr.x=position.x+app->selection_box[jt].x1;
+                    dst_rect.lr.y=position.y+app->selection_box[jt].y1-offset;
+                    PgAlphaOn();
+                    PgSetAlpha(Pg_ALPHA_OP_SRC_GLOBAL | Pg_BLEND_SRC_As | Pg_BLEND_DST_1mAs, NULL, NULL, 0x60, NULL);
+                    PgSetFillColor(PgRGB(0xA0, 0xA0, 0x20));
                     PgDrawRect(&dst_rect, Pg_DRAW_FILL);
                     PgAlphaOff();
                 }

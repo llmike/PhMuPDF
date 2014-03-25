@@ -105,7 +105,7 @@ int create_window(photon_mupdf_t* app)
     PtSetArg(&winargs[winargc++], Pt_ARG_FILL_COLOR, PgRGB(0x70, 0x70, 0x70), 0);
     PtSetArg(&winargs[winargc++], Pt_ARG_RAW_DRAW_F, phmupdf_draw_content, 0);
     PtSetArg(&winargs[winargc++], Pt_ARG_POINTER, (void*)app, 0);
-    raw_cb.event_mask=Ph_EV_BUT_PRESS | Ph_EV_PTR_MOTION_BUTTON |
+    raw_cb.event_mask=Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE | Ph_EV_PTR_MOTION_BUTTON |
         Ph_EV_PTR_MOTION_NOBUTTON | Ph_EV_BOUNDARY;
     raw_cb.event_f=phmupdf_content_callback_raw;
     raw_cb.data=(void*)app;
@@ -954,6 +954,7 @@ int change_window_size(photon_mupdf_t* app)
     {
         app->pdf_zoom=PHMUPDF_ZOOM_FIT_WIDTH;
         sprintf(text, "%d%%", app->pdf_zoommax);
+        PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 12, 0);
         PtSetResource(app->nbzoomlevel, Pt_ARG_TEXT_STRING, text, 0);
     }
 

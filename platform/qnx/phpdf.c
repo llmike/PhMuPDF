@@ -521,7 +521,7 @@ int phpdf_openfile(photon_mupdf_t* app)
 
         app->pdf_zoom=PHMUPDF_ZOOM_FIT_WIDTH;
         PtSetResource(app->nbzoomlevel, Pt_ARG_FLAGS, Pt_FALSE, Pt_BLOCKED);
-        PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 5, 0);
+        PtSetResource(app->nbzoomlevel, Pt_ARG_CBOX_SEL_ITEM, 12, 0);
         sprintf(text, "%d%%", app->pdf_zoommax);
         PtSetResource(app->nbzoomlevel, Pt_ARG_TEXT_STRING, text, 0);
     }
